@@ -1,6 +1,5 @@
 import { useTilt } from '../hooks/useTilt';
 import { products } from '../data/products';
-import { whatsappLink } from '../config';
 import { Icon } from './Icon';
 
 const slides = products.flatMap((p) => p.images.map((src) => ({ src, name: p.name })));
@@ -25,13 +24,8 @@ export function Hero() {
           <a className="btn btn--primary btn--lg" href="#collection">
             Shop the collection <Icon name="arrow" size={18} />
           </a>
-          <a
-            className="btn btn--glass btn--lg"
-            href={whatsappLink('Hi Cutesify! I have a question about your wigs.')}
-            target="_blank"
-            rel="noreferrer"
-          >
-            <Icon name="whatsapp" size={18} /> Chat with us
+          <a className="btn btn--glass btn--lg" href="#how-to-order">
+            How to order
           </a>
         </div>
         <dl className="hero__stats">

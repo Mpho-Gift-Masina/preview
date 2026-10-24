@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { whatsappLink } from '../config';
+import { useOpenOrder } from '../order';
 import { Icon } from './Icon';
 
 const links = [
@@ -11,6 +11,7 @@ const links = [
 export function Nav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const openOrder = useOpenOrder();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -43,10 +44,16 @@ export function Nav() {
             </li>
           ))}
           <li className="nav__links-cta">
-            <a className="btn btn--primary" href={whatsappLink('Hi Cutesify! I would like to order a unit.')} target="_blank" rel="noreferrer">
-              <Icon name="whatsapp" size={18} />
+            <button
+              className="btn btn--primary"
+              onClick={() => {
+                setOpen(false);
+                openOrder();
+              }}
+            >
+              <Icon name="bag" size={18} />
               Order now
-            </a>
+            </button>
           </li>
         </ul>
 

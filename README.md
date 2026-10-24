@@ -15,7 +15,12 @@ npm run preview  # serve the production build
 
 - **Products**: `src/data/products.ts` (name, price, length, lace, colour, photos).
 - **Photos**: `public/images/` (WebP, about 900px wide).
-- **WhatsApp number**: set `WHATSAPP_NUMBER` in `src/config.ts` (digits only, international format, e.g. `27821234567`). Until it is set, the Order buttons open WhatsApp with the message prefilled and let the customer pick the contact.
+- **Order emails**: orders are sent from the order form to the seller's inbox through [Web3Forms](https://web3forms.com) (free, no server needed).
+  1. On web3forms.com, enter the email address that should receive orders and copy the access key it sends you.
+  2. Copy `.env.example` to `.env` and set `VITE_WEB3FORMS_KEY=<your key>`. When deploying (Vercel, Netlify, etc.), add the same variable in the host's environment settings.
+  3. Rebuild. Each order arrives as an email with the unit, name, phone, email, delivery address and notes; reply to it to reach the customer.
+
+  Until the key is set, the form shows "Online ordering is not set up yet" instead of sending.
 
 ## Design notes
 

@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Product } from '../data/products';
 import { formatPrice } from '../data/products';
-import { whatsappLink } from '../config';
-import { orderMessage } from './ProductCard';
+import { useOpenOrder } from '../order';
 import { Icon } from './Icon';
 
 interface Props {
@@ -13,6 +12,7 @@ interface Props {
 export function ProductDialog({ product, onClose }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
   const [active, setActive] = useState(0);
+  const openOrder = useOpenOrder();
 
   useEffect(() => {
     const dlg = ref.current;
@@ -73,9 +73,15 @@ export function ProductDialog({ product, onClose }: Props) {
               <div><dt>Colour</dt><dd>{product.colour}</dd></div>
               <div><dt>Texture</dt><dd>{product.texture}</dd></div>
             </dl>
-            <a className="btn btn--primary btn--lg" href={whatsappLink(orderMessage(product))} target="_blank" rel="noreferrer">
-              <Icon name="whatsapp" size={18} /> Order {product.name} on WhatsApp
-            </a>
+            <button
+              className="btn btn--primary btn--lg"
+              onClick={() => {
+                onClose();
+                openOrder(product.id);
+              }}
+            >
+              <Icon name="bag" size={18} /> Order {product.name}
+            </button>
           </div>
         </div>
       )}

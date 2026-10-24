@@ -1,9 +1,8 @@
 import type { SVGProps } from 'react';
 
 const paths = {
-  whatsapp: (
-    <path d="M3 21l1.65-4.8A8.5 8.5 0 1 1 7.9 19.4L3 21zM9 8.5c0 3.5 3 6.5 6.5 6.5l1-1.5-2-1-1 .8a5 5 0 0 1-2.3-2.3l.8-1-1-2L9.5 8.5z" />
-  ),
+  mail: <path d="M4 6h16v12H4zM4 7l8 6 8-6" />,
+  bag: <path d="M6 8h12l-1 12H7L6 8zM9 8V6a3 3 0 0 1 6 0v2" />,
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
   sparkle: <path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6L12 3z" />,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,

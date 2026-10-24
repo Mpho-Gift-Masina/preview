@@ -1,7 +1,7 @@
 import type { Product } from '../data/products';
 import { formatPrice } from '../data/products';
 import { useTilt } from '../hooks/useTilt';
-import { whatsappLink } from '../config';
+import { useOpenOrder } from '../order';
 import { Icon } from './Icon';
 
 interface Props {
@@ -9,12 +9,9 @@ interface Props {
   onOpen: (product: Product) => void;
 }
 
-export function orderMessage(p: Product): string {
-  return `Hi Cutesify! I'd like to order "${p.name}" (${p.lengthInches}", ${p.lace} lace, ${formatPrice(p.price)}). Is it available?`;
-}
-
 export function ProductCard({ product: p, onOpen }: Props) {
   const tilt = useTilt<HTMLElement>(8);
+  const openOrder = useOpenOrder();
   const [front, back] = p.images;
 
   return (
@@ -42,9 +39,9 @@ export function ProductCard({ product: p, onOpen }: Props) {
           <li>{p.texture}</li>
         </ul>
         <div className="product__actions">
-          <a className="btn btn--primary" href={whatsappLink(orderMessage(p))} target="_blank" rel="noreferrer">
-            <Icon name="whatsapp" size={18} /> Order
-          </a>
+          <button className="btn btn--primary" onClick={() => openOrder(p.id)} aria-label={`Order ${p.name}`}>
+            <Icon name="bag" size={18} /> Order
+          </button>
           <button className="btn btn--glass" onClick={() => onOpen(p)} aria-label={`View details for ${p.name}`}>
             Details
           </button>

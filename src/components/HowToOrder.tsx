@@ -1,7 +1,7 @@
 const steps = [
   { title: 'Pick your unit', body: 'Browse the collection and choose the length, colour and lace you love.' },
-  { title: 'Message us on WhatsApp', body: 'Tap Order and your message is ready to send, with the unit details filled in.' },
-  { title: 'Confirm and slay', body: 'We confirm availability, then arrange payment and delivery with you.' },
+  { title: 'Send your order', body: 'Tap Order and fill in your name, contact details and delivery address.' },
+  { title: 'Confirm and slay', body: 'We email you to confirm availability, then arrange payment and delivery.' },
 ];
 
 export function HowToOrder() {
