@@ -1357,6 +1357,16 @@ button {
   color: var(--text-muted);
 }
 
+.order__done .order__ref {
+  color: var(--text);
+}
+
+.order__ref strong {
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  color: var(--pink-soft);
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

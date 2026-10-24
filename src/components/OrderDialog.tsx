@@ -6,6 +6,13 @@ import { Icon } from './Icon';
 
 type Status = 'idle' | 'sending' | 'sent' | 'error';
 
+/** Short reference the customer and seller can both quote, e.g. CUT-7K3QX9. */
+function orderReference(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(6));
+  return 'CUT-' + Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
+}
+
 interface Props {
   /** `undefined` = closed, `''` = open with no unit chosen, otherwise a product id. */
   productId: string | undefined;
@@ -18,6 +25,7 @@ export function OrderDialog({ productId, onClose }: Props) {
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
   const [unit, setUnit] = useState('');
+  const [reference, setReference] = useState('');
   // Bumped on every open so the form remounts with empty fields.
   const [formKey, setFormKey] = useState(0);
 
@@ -48,7 +56,7 @@ export function OrderDialog({ productId, onClose }: Props) {
 
     if (!WEB3FORMS_KEY) {
       setStatus('error');
-      setError('Online ordering is not set up yet. Please try again later.');
+      setError('Ordering is temporarily unavailable. Please try again shortly.');
       return;
     }
 
@@ -58,6 +66,7 @@ export function OrderDialog({ productId, onClose }: Props) {
       ? `${product.name} (${product.lengthInches}", ${product.lace} lace, ${product.colour}, ${formatPrice(product.price)})`
       : data.unit;
 
+    const ref = orderReference();
     setStatus('sending');
     setError('');
     try {
@@ -66,10 +75,11 @@ export function OrderDialog({ productId, onClose }: Props) {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
           access_key: WEB3FORMS_KEY,
-          subject: `New order: ${product?.name ?? 'Cutesify unit'} from ${data.name}`,
+          subject: `New order ${ref}: ${product?.name ?? 'Cutesify unit'} from ${data.name}`,
           from_name: 'Cutesify website',
           replyto: data.email,
           botcheck: data.botcheck,
+          'Order reference': ref,
           Unit: unitLabel,
           Name: data.name,
           Email: data.email,
@@ -80,6 +90,7 @@ export function OrderDialog({ productId, onClose }: Props) {
       });
       const json = (await res.json().catch(() => ({}))) as { success?: boolean; message?: string };
       if (!res.ok || !json.success) throw new Error(json.message || `Request failed (${res.status})`);
+      setReference(ref);
       setStatus('sent');
     } catch {
       setStatus('error');
@@ -109,6 +120,9 @@ export function OrderDialog({ productId, onClose }: Props) {
             <p>
               Thank you! We've received your order{selected ? ` for ${selected.name}` : ''} and will email you
               to confirm availability, payment and delivery.
+            </p>
+            <p className="order__ref">
+              Your order reference: <strong>{reference}</strong>
             </p>
             <button className="btn btn--primary btn--lg" onClick={onClose}>
               Done
