@@ -1,155 +1,51 @@
-import { useState, type FormEvent } from 'react';
+import type { FormEvent } from 'react';
 import { formatPrice } from '../data/products';
-import type { CardDetails, CardErrors, PaymentInput } from '../lib/payment';
-import { BANKS, cardBrand, formatCardNumber, formatExpiry, validateCard } from '../lib/payment';
-import { Field, errorProps } from './Field';
+import { DEMO_MODE } from '../lib/payment';
 import { Icon } from './Icon';
-
-type Method = PaymentInput['method'];
-type Errors = CardErrors & { bank?: string };
-
-const brandLabel = { visa: 'Visa', mastercard: 'Mastercard', amex: 'Amex', unknown: '' } as const;
 
 interface Props {
   amount: number;
   busy: boolean;
   error: string | null;
-  onPay: (input: PaymentInput) => void;
+  onPay: () => void;
   onBack: () => void;
 }
 
-/** Payment step: choose card or Instant EFT, enter details, then Pay. */
+/**
+ * Payment step. While DEMO_MODE is on, no payment details are asked for: the customer
+ * sees a clear notice that online payment isn't active yet and can place a demo order.
+ * PAYFAST: once live, keep this step as-is but relabel the button "Pay {amount} with PayFast";
+ * PayFast's own page collects card / Instant EFT details, never this site.
+ */
 export function PaymentForm({ amount, busy, error, onPay, onBack }: Props) {
-  const [method, setMethod] = useState<Method>('card');
-  const [card, setCard] = useState<CardDetails>({ name: '', number: '', expiry: '', cvc: '' });
-  const [bank, setBank] = useState('');
-  const [errors, setErrors] = useState<Errors>({});
-  const brand = cardBrand(card.number);
-
-  function setField(key: keyof CardDetails, value: string) {
-    setCard((c) => ({ ...c, [key]: value }));
-    setErrors((e) => ({ ...e, [key]: undefined }));
-  }
-
-  // PAYFAST: once PayFast is live, this whole form can shrink to the "Pay" button.
-  // PayFast's own page asks for card or Instant EFT details, so the card fields,
-  // the bank picker and validateCard() below are no longer needed. Just call onPay().
   function submit(e: FormEvent) {
     e.preventDefault();
-    if (busy) return;
-    const errs: Errors = method === 'card' ? validateCard(card) : bank ? {} : { bank: 'Choose your bank.' };
-    setErrors(errs);
-    const first = Object.keys(errs)[0];
-    if (first) {
-      document.getElementById(`pay-${first}`)?.focus();
-      return;
-    }
-    onPay(method === 'card' ? { method, card } : { method, bank });
+    if (!busy) onPay();
   }
 
   return (
     <form onSubmit={submit} noValidate>
-      {/* PAYFAST: replace these two fieldsets (method choice + card/bank details) with a short note
-          such as "You'll be taken to PayFast to pay securely by card, Instant EFT and more."
-          Never collect card numbers on this site once PayFast is connected. */}
       <fieldset className="co-section" disabled={busy}>
-        <legend>Payment method</legend>
-        <div className="choices">
-          <label className={`choice ${method === 'card' ? 'is-checked' : ''}`}>
-            <input type="radio" name="pay-method" checked={method === 'card'} onChange={() => setMethod('card')} />
-            <Icon name="card" size={22} />
-            <span>
-              <strong>Card</strong>
-              <small>Visa, Mastercard, Amex</small>
-            </span>
-          </label>
-          <label className={`choice ${method === 'eft' ? 'is-checked' : ''}`}>
-            <input type="radio" name="pay-method" checked={method === 'eft'} onChange={() => setMethod('eft')} />
-            <Icon name="bank" size={22} />
-            <span>
-              <strong>Instant EFT</strong>
-              <small>Pay from your bank app</small>
-            </span>
-          </label>
+        <legend>Payment</legend>
+        <div className="pay-placeholder">
+          {DEMO_MODE && <span className="demo-badge">Demo mode</span>}
+          <span className="pay-placeholder__icon" aria-hidden="true">
+            <Icon name="lock" size={22} />
+          </span>
+          <div>
+            <p className="pay-placeholder__title">Secure online payment is coming soon</p>
+            <p className="pay-placeholder__text">
+              Card and Instant EFT payments will be available once our payment provider is activated. Your card or bank
+              details will then be entered on the provider's secure page, never on this website.
+            </p>
+            {DEMO_MODE && (
+              <p className="pay-placeholder__text">
+                For now you can place a <strong>demo order</strong> to try the checkout. No payment is taken and no order is
+                sent to us.
+              </p>
+            )}
+          </div>
         </div>
-      </fieldset>
-
-      <fieldset className="co-section" disabled={busy}>
-        <legend>{method === 'card' ? 'Card details' : 'Your bank'}</legend>
-        {method === 'card' ? (
-          <div className="form-grid">
-            <Field id="pay-name" label="Name on card" error={errors.name}>
-              <input
-                id="pay-name"
-                className="input"
-                autoComplete="cc-name"
-                value={card.name}
-                onChange={(e) => setField('name', e.target.value)}
-                {...errorProps('pay-name', errors.name)}
-              />
-            </Field>
-            <Field id="pay-number" label="Card number" error={errors.number}>
-              <div className="input-wrap">
-                <input
-                  id="pay-number"
-                  className="input"
-                  inputMode="numeric"
-                  autoComplete="cc-number"
-                  placeholder="1234 5678 9012 3456"
-                  value={card.number}
-                  onChange={(e) => setField('number', formatCardNumber(e.target.value))}
-                  {...errorProps('pay-number', errors.number)}
-                />
-                {brand !== 'unknown' && <span className="input-wrap__badge">{brandLabel[brand]}</span>}
-              </div>
-            </Field>
-            <Field id="pay-expiry" label="Expiry" error={errors.expiry} half>
-              <input
-                id="pay-expiry"
-                className="input"
-                inputMode="numeric"
-                autoComplete="cc-exp"
-                placeholder="MM/YY"
-                value={card.expiry}
-                onChange={(e) => setField('expiry', formatExpiry(e.target.value))}
-                {...errorProps('pay-expiry', errors.expiry)}
-              />
-            </Field>
-            <Field id="pay-cvc" label="Security code" error={errors.cvc} half>
-              <input
-                id="pay-cvc"
-                className="input"
-                inputMode="numeric"
-                autoComplete="cc-csc"
-                placeholder={brand === 'amex' ? '4 digits' : '3 digits'}
-                value={card.cvc}
-                onChange={(e) => setField('cvc', e.target.value.replace(/\D/g, '').slice(0, 4))}
-                {...errorProps('pay-cvc', errors.cvc)}
-              />
-            </Field>
-          </div>
-        ) : (
-          <div className="form-grid">
-            <Field id="pay-bank" label="Bank" error={errors.bank}>
-              <select
-                id="pay-bank"
-                className="input"
-                value={bank}
-                onChange={(e) => {
-                  setBank(e.target.value);
-                  setErrors({});
-                }}
-                {...errorProps('pay-bank', errors.bank)}
-              >
-                <option value="">Choose your bank</option>
-                {BANKS.map((b) => (
-                  <option key={b}>{b}</option>
-                ))}
-              </select>
-            </Field>
-            <p className="field field__note">You'll approve the payment in your banking app. Your order is confirmed as soon as it clears.</p>
-          </div>
-        )}
       </fieldset>
 
       {error && (
@@ -158,8 +54,6 @@ export function PaymentForm({ amount, busy, error, onPay, onBack }: Props) {
         </p>
       )}
 
-      {/* PAYFAST: with the redirect method, relabel the busy text to "Taking you to PayFast…"
-          and the button to "Pay {amount} with PayFast". */}
       <div className="co-actions">
         <button type="button" className="btn btn--ghost" onClick={onBack} disabled={busy}>
           Back
@@ -167,18 +61,13 @@ export function PaymentForm({ amount, busy, error, onPay, onBack }: Props) {
         <button type="submit" className="btn btn--primary btn--lg" disabled={busy} aria-live="polite">
           {busy ? (
             <>
-              <span className="spinner" aria-hidden="true" /> Processing payment…
+              <span className="spinner" aria-hidden="true" /> Placing demo order…
             </>
           ) : (
-            <>
-              <Icon name="lock" size={18} /> Pay {formatPrice(amount)}
-            </>
+            <>Place demo order · {formatPrice(amount)}</>
           )}
         </button>
       </div>
-      <p className="co-secure">
-        <Icon name="lock" size={14} /> Payments are processed by our payment provider. We never see or store your card details.
-      </p>
     </form>
   );
 }
