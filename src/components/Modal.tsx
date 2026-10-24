@@ -75,12 +75,28 @@ function ModalPanel({ onClose, labelledBy, variant = 'center', className = '', d
     };
   }, []);
 
-  /** Escape closes; Tab and Shift+Tab loop around inside the modal instead of escaping to the page. */
-  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key === 'Escape' && dismissible) {
-      e.stopPropagation();
-      onClose();
+  // Escape closes the modal even if focus has fallen out of it (e.g. the focused button was removed),
+  // and Tab pulls stray focus back inside. Listening on the document makes this work in every case.
+  const latest = useRef({ onClose, dismissible });
+  latest.current = { onClose, dismissible };
+  useEffect(() => {
+    function onDocKey(e: globalThis.KeyboardEvent) {
+      const panel = ref.current;
+      if (!panel) return;
+      if (e.key === 'Escape' && latest.current.dismissible) {
+        e.preventDefault();
+        latest.current.onClose();
+      } else if (e.key === 'Tab' && !panel.contains(document.activeElement)) {
+        e.preventDefault();
+        panel.focus({ preventScroll: true });
+      }
     }
+    document.addEventListener('keydown', onDocKey);
+    return () => document.removeEventListener('keydown', onDocKey);
+  }, []);
+
+  /** Tab and Shift+Tab loop around inside the modal instead of escaping to the page. */
+  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key !== 'Tab' || !ref.current) return;
     const items = ref.current.querySelectorAll<HTMLElement>(FOCUSABLE);
     if (!items.length) return;

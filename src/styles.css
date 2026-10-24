@@ -2430,28 +2430,6 @@ textarea.input {
   border-color: var(--danger);
 }
 
-.input-wrap {
-  position: relative;
-}
-
-.input-wrap .input {
-  padding-right: 110px;
-}
-
-.input-wrap__badge {
-  position: absolute;
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
-  padding: 3px 8px;
-  border-radius: 6px;
-  background: var(--blush);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 /* Radio cards */
 .choices {
   display: grid;
@@ -2637,6 +2615,93 @@ fieldset:disabled .choice {
   grid-column: 2;
   grid-row: 1;
   align-self: start;
+}
+
+/* Error screen shown by ErrorBoundary if the page crashes. */
+.crash {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter);
+}
+
+.crash__card {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  max-width: 460px;
+  padding: 40px 32px;
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.crash__card img {
+  border-radius: 50%;
+}
+
+.crash__card p {
+  color: var(--text-muted);
+}
+
+/* Payment step placeholder shown until a payment provider is connected. */
+.pay-placeholder {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border-radius: var(--radius-sm);
+  background: var(--blush);
+  border: 1px solid var(--pink-soft);
+}
+
+.pay-placeholder__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--pink);
+  border: 1px solid var(--pink-soft);
+}
+
+.pay-placeholder__title {
+  margin-bottom: 6px;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.pay-placeholder__text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.pay-placeholder__text + .pay-placeholder__text {
+  margin-top: 8px;
+}
+
+.pay-placeholder .demo-badge {
+  position: absolute;
+  top: -11px;
+  right: 16px;
+}
+
+/* "Demo mode" label: makes simulated checkout steps impossible to mistake for real ones. */
+.demo-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #fff4d6;
+  border: 1px solid #f1d38a;
+  color: #7a5200;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .alert {

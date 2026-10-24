@@ -1,3 +1,11 @@
+/*
+ * All money maths for the bag and checkout. Prices are whole rands taken from data/products.ts
+ * (never from saved bag data), so totals are exact.
+ *
+ * SECURITY: these totals are for display only. Anything running in the browser can be changed
+ * by the visitor, so when a real payment gateway is connected the server must recalculate every
+ * price, delivery fee and total itself before charging. Never trust a total sent from the browser.
+ */
 import type { Product } from '../data/products';
 import { products } from '../data/products';
 import type { DeliverySpeed } from '../config';

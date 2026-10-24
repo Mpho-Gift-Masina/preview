@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import './styles.css';
 
 // Always open at the top of the page on load or reload:
@@ -13,8 +14,11 @@ if (hash && !hash.startsWith('#/')) history.replaceState(null, '', pathname + se
 window.scrollTo(0, 0);
 
 // Mount the React app into <div id="root"> in index.html.
+// ErrorBoundary shows a friendly "Something went wrong" screen if anything crashes.
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 );
