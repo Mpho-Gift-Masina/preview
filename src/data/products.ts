@@ -1,5 +1,7 @@
+/** The two lace frontal sizes we sell. */
 export type LaceSize = '13x4' | '13x6';
 
+/** One wig in the shop. Edit the `products` list below to change what's for sale. */
 export interface Product {
   id: string;
   name: string;
@@ -65,6 +67,7 @@ export const products: Product[] = [
   },
 ];
 
+/** Shows a price in South African style, e.g. 1500 → "R1 500". */
 export function formatPrice(rand: number): string {
   return `R${rand.toLocaleString('en-ZA')}`;
 }

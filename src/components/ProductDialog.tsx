@@ -1,51 +1,53 @@
 import { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import type { Product } from '../data/products';
 import { formatPrice } from '../data/products';
-import { whatsappLink } from '../config';
-import { orderMessage } from './ProductCard';
+import { useCart } from '../cart/CartContext';
 import { Icon } from './Icon';
+import { Modal } from './Modal';
+import { ease } from './motion';
 
 interface Props {
   product: Product | null;
   onClose: () => void;
 }
 
+/** Product details popup: photo gallery with thumbnails, specs and an "Add to bag" button. */
 export function ProductDialog({ product, onClose }: Props) {
-  const ref = useRef<HTMLDialogElement>(null);
   const [active, setActive] = useState(0);
+  const { add, openCart } = useCart();
+  // Keep showing the last product while the dialog animates out.
+  const last = useRef(product);
+  if (product) last.current = product;
+  const p = product ?? last.current;
 
   useEffect(() => {
-    const dlg = ref.current;
-    if (!dlg) return;
-    if (product && !dlg.open) {
-      setActive(0);
-      dlg.showModal();
-    } else if (!product && dlg.open) {
-      dlg.close();
-    }
+    if (product) setActive(0);
   }, [product]);
 
   return (
-    <dialog
-      ref={ref}
-      className="dialog glass"
-      aria-labelledby="dialog-title"
-      onClose={onClose}
-      onClick={(e) => e.target === ref.current && onClose()}
-    >
-      {product && (
+    <Modal open={!!product} onClose={onClose} labelledBy="dialog-title" className="dialog">
+      {p && (
         <div className="dialog__inner">
           <div className="dialog__gallery">
-            <img
-              key={product.images[active]}
-              src={product.images[active]}
-              alt={`${product.name}, photo ${active + 1} of ${product.images.length}`}
-              width={450}
-              height={600}
-            />
-            {product.images.length > 1 && (
+            <div className="dialog__photo">
+              <AnimatePresence initial={false}>
+                <motion.img
+                  key={p.images[active]}
+                  src={p.images[active]}
+                  alt={`${p.name}, photo ${active + 1} of ${p.images.length}`}
+                  width={450}
+                  height={600}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.6, ease }}
+                />
+              </AnimatePresence>
+            </div>
+            {p.images.length > 1 && (
               <div className="dialog__thumbs" role="group" aria-label="Photos">
-                {product.images.map((src, i) => (
+                {p.images.map((src, i) => (
                   <button
                     key={src}
                     className={i === active ? 'is-active' : ''}
@@ -60,25 +62,44 @@ export function ProductDialog({ product, onClose }: Props) {
             )}
           </div>
           <div className="dialog__details">
-            <button className="dialog__close" onClick={onClose} aria-label="Close">
-              <Icon name="close" size={22} />
+            <button className="icon-btn dialog__close" onClick={onClose} aria-label="Close">
+              <Icon name="close" size={20} />
             </button>
             <p className="eyebrow">Unit</p>
-            <h2 id="dialog-title">{product.name}</h2>
-            <p className="dialog__price">{formatPrice(product.price)}</p>
-            <p>{product.description}</p>
+            <h2 id="dialog-title">{p.name}</h2>
+            <p className="dialog__price">{formatPrice(p.price)}</p>
+            <p>{p.description}</p>
             <dl className="dialog__specs">
-              <div><dt>Length</dt><dd>{product.lengthInches} inches</dd></div>
-              <div><dt>Lace</dt><dd>{product.lace} transparent frontal</dd></div>
-              <div><dt>Colour</dt><dd>{product.colour}</dd></div>
-              <div><dt>Texture</dt><dd>{product.texture}</dd></div>
+              <div>
+                <dt>Length</dt>
+                <dd>{p.lengthInches} inches</dd>
+              </div>
+              <div>
+                <dt>Lace</dt>
+                <dd>{p.lace} transparent frontal</dd>
+              </div>
+              <div>
+                <dt>Colour</dt>
+                <dd>{p.colour}</dd>
+              </div>
+              <div>
+                <dt>Texture</dt>
+                <dd>{p.texture}</dd>
+              </div>
             </dl>
-            <a className="btn btn--primary btn--lg" href={whatsappLink(orderMessage(product))} target="_blank" rel="noreferrer">
-              <Icon name="whatsapp" size={18} /> Order {product.name} on WhatsApp
-            </a>
+            <button
+              className="btn btn--primary btn--lg"
+              onClick={() => {
+                add(p.id);
+                onClose();
+                openCart();
+              }}
+            >
+              <Icon name="bag" size={18} /> Add {p.name} to bag
+            </button>
           </div>
         </div>
       )}
-    </dialog>
+    </Modal>
   );
 }

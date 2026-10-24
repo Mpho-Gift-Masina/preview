@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import type { LaceSize } from '../data/products';
 import { Icon } from './Icon';
+import { fadeUp, reveal, slideIn, stagger } from './motion';
 
+// Copy and diagram for each lace size.
 const guides: Record<LaceSize, { title: string; image: string; alt: string; points: string[] }> = {
   '13x4': {
     title: '13x4 lace frontal',
@@ -27,20 +30,25 @@ const guides: Record<LaceSize, { title: string; image: string; alt: string; poin
   },
 };
 
+/** Lace guide: tabs switch the bullet list and flip the 3D diagram card between 13x4 and 13x6. */
 export function LaceGuide() {
   const [size, setSize] = useState<LaceSize>('13x4');
+  // The card shows its back face (13x6) when flipped.
   const flipped = size === '13x6';
 
   return (
     <section id="lace-guide" className="section lace">
-      <div className="lace__copy" data-reveal>
-        <p className="eyebrow">Lace guide</p>
-        <h2>13x4 or 13x6?</h2>
-        <p className="section__lede">
+      {/* Text column: lines rise in one after another. */}
+      <motion.div className="lace__copy" variants={stagger} {...reveal}>
+        <motion.p className="eyebrow" variants={fadeUp}>
+          Lace guide
+        </motion.p>
+        <motion.h2 variants={fadeUp}>13x4 or 13x6?</motion.h2>
+        <motion.p className="section__lede" variants={fadeUp}>
           Both give you a natural hairline from ear to ear. The difference is how far back you can part.
-        </p>
+        </motion.p>
 
-        <div className="filters glass" role="tablist" aria-label="Lace size">
+        <motion.div className="filters glass" role="tablist" aria-label="Lace size" variants={fadeUp}>
           {(Object.keys(guides) as LaceSize[]).map((s) => (
             <button
               key={s}
@@ -54,18 +62,19 @@ export function LaceGuide() {
               {s}
             </button>
           ))}
-        </div>
+        </motion.div>
 
-        <ul className="lace__points" id="lace-panel" role="tabpanel" aria-labelledby={`tab-${size}`}>
+        <motion.ul className="lace__points" id="lace-panel" role="tabpanel" aria-labelledby={`tab-${size}`} variants={fadeUp}>
           {guides[size].points.map((pt) => (
             <li key={pt}>
               <Icon name="check" size={18} /> {pt}
             </li>
           ))}
-        </ul>
-      </div>
+        </motion.ul>
+      </motion.div>
 
-      <div className="flip" data-reveal>
+      {/* Diagram card slides in from the right; CSS flips it when the tab changes. */}
+      <motion.div className="flip" variants={slideIn} {...reveal}>
         <div className={`flip__card ${flipped ? 'is-flipped' : ''}`}>
           {(['13x4', '13x6'] as LaceSize[]).map((s, i) => (
             <figure key={s} className={`flip__face glass ${i ? 'flip__face--back' : ''}`} aria-hidden={s !== size}>
@@ -74,7 +83,7 @@ export function LaceGuide() {
             </figure>
           ))}
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

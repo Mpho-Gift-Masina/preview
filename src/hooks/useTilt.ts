@@ -1,31 +1,25 @@
-import { useCallback, useRef } from 'react';
-import type { PointerEvent } from 'react';
-import { useReducedMotion } from './useReducedMotion';
+import { useCallback, useRef, type PointerEvent } from 'react';
+import { useReducedMotion } from 'framer-motion';
 
 /**
- * 3D tilt that follows the pointer. Writes --rx / --ry (degrees) and
- * --mx / --my (glare position, %) onto the element; CSS does the rest.
+ * Pointer-driven 3D tilt. Writes --rx/--ry (rotation) and --mx/--my (glare position)
+ * as CSS variables on the element, so styling stays in CSS.
  */
 export function useTilt<T extends HTMLElement>(maxDeg = 10) {
   const ref = useRef<T>(null);
-  const frame = useRef(0);
   const reduced = useReducedMotion();
 
   const onPointerMove = useCallback(
     (e: PointerEvent<T>) => {
       const el = ref.current;
-      if (!el || reduced || e.pointerType === 'touch') return;
-      const { clientX, clientY } = e;
-      cancelAnimationFrame(frame.current);
-      frame.current = requestAnimationFrame(() => {
-        const r = el.getBoundingClientRect();
-        const px = (clientX - r.left) / r.width;
-        const py = (clientY - r.top) / r.height;
-        el.style.setProperty('--ry', `${(px - 0.5) * maxDeg * 2}deg`);
-        el.style.setProperty('--rx', `${(0.5 - py) * maxDeg * 2}deg`);
-        el.style.setProperty('--mx', `${px * 100}%`);
-        el.style.setProperty('--my', `${py * 100}%`);
-      });
+      if (!el || reduced || e.pointerType !== 'mouse') return;
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      el.style.setProperty('--ry', `${(x - 0.5) * 2 * maxDeg}deg`);
+      el.style.setProperty('--rx', `${(0.5 - y) * 2 * maxDeg}deg`);
+      el.style.setProperty('--mx', `${x * 100}%`);
+      el.style.setProperty('--my', `${y * 100}%`);
     },
     [maxDeg, reduced],
   );
@@ -33,7 +27,6 @@ export function useTilt<T extends HTMLElement>(maxDeg = 10) {
   const onPointerLeave = useCallback(() => {
     const el = ref.current;
     if (!el) return;
-    cancelAnimationFrame(frame.current);
     el.style.setProperty('--rx', '0deg');
     el.style.setProperty('--ry', '0deg');
   }, []);

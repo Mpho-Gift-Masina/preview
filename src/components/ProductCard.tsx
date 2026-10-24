@@ -1,20 +1,20 @@
 import type { Product } from '../data/products';
 import { formatPrice } from '../data/products';
 import { useTilt } from '../hooks/useTilt';
-import { whatsappLink } from '../config';
+import { useCart } from '../cart/CartContext';
 import { Icon } from './Icon';
 
 interface Props {
   product: Product;
+  /** Opens the details popup for this product. */
   onOpen: (product: Product) => void;
 }
 
-export function orderMessage(p: Product): string {
-  return `Hi Cutesify! I'd like to order "${p.name}" (${p.lengthInches}", ${p.lace} lace, ${formatPrice(p.price)}). Is it available?`;
-}
-
+/** One glass product card: photo (swaps to a second angle on hover), name, price, specs and buttons. */
 export function ProductCard({ product: p, onOpen }: Props) {
+  // 3D tilt and light glare that follow the mouse.
   const tilt = useTilt<HTMLElement>(8);
+  const { add, openCart } = useCart();
   const [front, back] = p.images;
 
   return (
@@ -23,7 +23,7 @@ export function ProductCard({ product: p, onOpen }: Props) {
       ref={tilt.ref}
       onPointerMove={tilt.onPointerMove}
       onPointerLeave={tilt.onPointerLeave}
-      style={{ ['--tint-a' as string]: p.tint[0], ['--tint-b' as string]: p.tint[1] }}
+      style={{ ['--tint' as string]: p.tint[1] }}
     >
       <div className="product__media">
         <img src={front} alt={`${p.name}: ${p.colour} wig on a mannequin`} loading="lazy" width={450} height={600} />
@@ -42,9 +42,17 @@ export function ProductCard({ product: p, onOpen }: Props) {
           <li>{p.texture}</li>
         </ul>
         <div className="product__actions">
-          <a className="btn btn--primary" href={whatsappLink(orderMessage(p))} target="_blank" rel="noreferrer">
-            <Icon name="whatsapp" size={18} /> Order
-          </a>
+          {/* Add one to the bag, then slide the bag open so the customer sees it. */}
+          <button
+            className="btn btn--primary"
+            onClick={() => {
+              add(p.id);
+              openCart();
+            }}
+            aria-label={`Add ${p.name} to bag`}
+          >
+            <Icon name="bag" size={18} /> Add
+          </button>
           <button className="btn btn--glass" onClick={() => onOpen(p)} aria-label={`View details for ${p.name}`}>
             Details
           </button>
