@@ -23,7 +23,22 @@ npm run preview  # serve the production build
 - All money maths lives in `src/cart/pricing.ts`: subtotal, courier fee (local vs national rate, free standard delivery over the threshold), collection fee and total.
 - Checkout (`src/components/Checkout.tsx`) has three steps: details with delivery or collection, payment, then confirmation.
 - **PayFast**: search the project for `PAYFAST:`. The step-by-step guide is at the top of `src/lib/payment.ts`, and the other comments mark each spot to change (`config.ts`, `Checkout.tsx`, `PaymentForm.tsx`, `useRoute.ts`). You'll need a small backend for the signature and the ITN webhook; never put the passphrase in front-end code.
-- **Payment gateway**: `src/lib/payment.ts` holds a mock `processPayment` so the flow can be tested. Card `4242 4242 4242 4242` (any future expiry, any CVC) succeeds; `4000 0000 0000 0002` is declined. Before going live, replace it with your provider's SDK (PayFast, Yoco, Peach Payments, Paystack…) and swap the card inputs for the provider's hosted fields, so card numbers never reach your server. Confirm each payment on a server through the provider's webhook before you fulfil the order.
+- **Demo mode** (`DEMO_MODE` in `src/lib/payment.ts`): no payment provider is connected. The payment step asks for no card or bank details; it explains that secure payment is coming and offers a clearly labelled "Place demo order" button. The confirmation says no payment was taken and the order was not sent.
+
+## Security notes
+
+- **No secrets in the front end.** Everything in `src/` ships to every visitor's browser. API keys, the PayFast passphrase and merchant credentials belong in a backend's environment variables only. `.env` files are git-ignored; commit only a `.env.example` without real values.
+- **Prices are display-only.** The bag stores product ids and quantities only; prices come from `src/data/products.ts`. Anything in the browser can be changed, so the server must recalculate every price, fee and total before charging.
+- **Saved bag data is validated** on load (unknown products, invalid quantities and duplicates are dropped or merged), so tampered or broken storage can't crash the site.
+- **Card details are never collected by this site.** When PayFast is connected, customers enter them on PayFast's own page.
+- **Errors**: `src/components/ErrorBoundary.tsx` shows a friendly reload screen instead of a blank page and never shows technical details to visitors.
+- **When deploying**: set security headers on the host (Content-Security-Policy, Strict-Transport-Security, X-Content-Type-Options, Referrer-Policy, frame-ancestors) and serve only over HTTPS.
+
+## Before PayFast goes live
+
+1. Agree the requirements with the client and open a PayFast (sandbox first) account.
+2. Build a small backend: a "create payment" endpoint that recalculates totals and signs the request, and an ITN webhook that confirms payments (see the guide at the top of `src/lib/payment.ts`).
+3. Replace the body of `processPayment`, add the return/cancel pages (`src/hooks/useRoute.ts`), and set `DEMO_MODE` to `false` only once real payments work end to end in the sandbox.
 
 ## Design notes
 
@@ -34,5 +49,5 @@ npm run preview  # serve the production build
 - 3D: the rotating photo ring in the hero, pointer-tilt cards with a glare, and the flip card in the lace guide.
 - Transitions (`src/components/motion.tsx`): sections fade up 28px with a soft ease and stagger their children, replaying each time they scroll into view; pages fade out and rise in (`usePageTransition` in `App.tsx`). Reloading always starts at the top (`main.tsx`).
 - Policy cards carousel (`src/components/PolicyCarousel.tsx`): 3D coverflow with swipe/drag, arrows, dots and ← → keys; tap the centre card to enlarge.
-- Policies page (`#/policies`, `src/components/PoliciesPage.tsx`): text from the policy graphics lives in `src/data/policies.ts`; the original graphics are in `assets/policies-*.jpeg`. Checkout asks customers to accept the policies before paying.
+- Policies page (`#/policies`, `src/components/PoliciesPage.tsx`): text from the policy graphics lives in `src/data/policies.ts`; the original graphics are in `assets/policies-*.jpeg`. Checkout asks customers to accept the policies before placing an order.
 - Accessibility: reduced-motion users get no movement (`MotionConfig reducedMotion="user"` plus CSS). Modals trap focus, close on Escape and restore focus. The story is also given to screen readers as plain text.

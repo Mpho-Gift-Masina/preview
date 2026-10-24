@@ -4,3 +4,9 @@ dist
 .DS_Store
 __pycache__
 *.tsbuildinfo
+
+# Environment files can hold secrets (e.g. future PayFast keys): never commit them.
+# A template without real values may be committed as .env.example.
+.env
+.env.*
+!.env.example

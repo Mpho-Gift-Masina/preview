@@ -13,11 +13,23 @@ type Action =
 /** Keeps a quantity between 1 and MAX_QTY (whole numbers only). */
 const clamp = (qty: number) => Math.max(1, Math.min(MAX_QTY, Math.floor(qty)));
 
-/** Returns the new bag contents for each action (never edits the old array). */
+/** True only for products that are actually for sale. */
+const isProduct = (id: unknown): id is string => typeof id === 'string' && products.some((p) => p.id === id);
+
+/**
+ * Returns the new bag contents for each action (never edits the old array).
+ * Unknown products and non-numeric quantities are ignored, so the bag can never hold invalid lines.
+ * Note: the bag stores only product ids and quantities. Prices always come from data/products.ts,
+ * and must be recalculated on the server once a real payment gateway is connected.
+ */
 function reducer(items: CartItem[], a: Action): CartItem[] {
+  if (a.type !== 'clear' && !isProduct(a.id)) return items;
+  if ((a.type === 'add' || a.type === 'set') && !Number.isFinite(a.qty)) return items;
+
   switch (a.type) {
     // Already in the bag? Bump the quantity. Otherwise add a new line.
     case 'add':
+      if (a.qty < 1) return items;
       return items.some((i) => i.id === a.id)
         ? items.map((i) => (i.id === a.id ? { ...i, qty: clamp(i.qty + a.qty) } : i))
         : [...items, { id: a.id, qty: clamp(a.qty) }];
@@ -35,14 +47,24 @@ function reducer(items: CartItem[], a: Action): CartItem[] {
 
 const STORAGE_KEY = 'cutesify-cart';
 
-/** Reads the saved bag from the browser, dropping anything invalid or no longer sold. */
+/**
+ * Reads the saved bag from the browser. Saved data can be broken or edited by hand,
+ * so anything unexpected is dropped: non-arrays, unknown products, non-whole or
+ * non-positive quantities. Duplicate lines are merged, and quantities capped at MAX_QTY.
+ * If storage is unavailable or the JSON is invalid, the bag simply starts empty.
+ */
 function load(): CartItem[] {
   try {
     const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
     if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((i) => products.some((p) => p.id === i?.id) && Number.isInteger(i.qty) && i.qty > 0)
-      .map((i) => ({ id: i.id, qty: clamp(i.qty) }));
+    const merged = new Map<string, number>();
+    for (const entry of parsed) {
+      const id: unknown = entry?.id;
+      const qty: unknown = entry?.qty;
+      if (!isProduct(id) || typeof qty !== 'number' || !Number.isInteger(qty) || qty < 1) continue;
+      merged.set(id, (merged.get(id) ?? 0) + qty);
+    }
+    return [...merged].map(([id, qty]) => ({ id, qty: clamp(qty) }));
   } catch {
     return [];
   }
